@@ -5,11 +5,12 @@
     "ses-to-discord": "bin/ses-to-discord.js"
   },
   "scripts": {
-    "deploy": "cdk deploy",
+    "deploy": "dotenv -- cdk deploy --require-approval never AppStage/\\*",
+    "destroy": "dotenv -- cdk destroy --force AppStage/\\*",
     "build": "tsc",
     "watch": "tsc -w",
     "test": "jest",
-    "cdk": "cdk"
+    "cdk": "dotenv -- cdk"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.119",
