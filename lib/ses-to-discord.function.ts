@@ -28,10 +28,24 @@ const postMessage = async (message: object) => {
   });
 };
 
+const checkEnvironment = (): void => {
+  if (!BUCKET_NAME) {
+    throw new Error("BUCKET_NAME not defined.");
+  }
+
+  if (!WEBHOOK_URL) {
+    throw new Error("WEBHOOK_URL not defined.");
+  }
+};
+
 export const handler: SESHandler = async (event) => {
+  checkEnvironment();
+
   event.Records.forEach(async (record) => {
     if (isSpam(record.ses.receipt)) {
-      logger.info(`Skip spam. Source: ${record.ses.mail.source}, Message-ID: ${record.ses.mail.messageId}`);
+      logger.info(
+        `Skip spam. Source: ${record.ses.mail.source}, Message-ID: ${record.ses.mail.messageId}`
+      );
       return;
     }
 

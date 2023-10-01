@@ -1,14 +1,14 @@
 import * as cdk from "aws-cdk-lib";
+import * as iam from "aws-cdk-lib/aws-iam";
 import { Construct } from "constructs";
 import { LambdaStack } from "./lambda-stack";
-import { S3BucketStack } from "./s3bucket-stack";
 import { sanitizeId } from "./libs/sanitize-id";
+import { Recipient } from "./recipient";
+import { S3BucketStack } from "./s3bucket-stack";
 import { SesRuleSetStack } from "./ses-rule-set-stack";
-import * as iam from "aws-cdk-lib/aws-iam";
 
 export interface MailToDiscordAppProps extends cdk.StageProps {
-  webhookUrl: string;
-  recipientDomainNames: string[];
+  recipients: Recipient[];
 }
 
 /**
@@ -26,8 +26,8 @@ export class MailToDiscordApp extends cdk.Stage {
     });
 
     // Mixing up
-    props.recipientDomainNames.forEach((domainName) => {
-      const idPostfix = sanitizeId(domainName);
+    props.recipients.forEach((recipient) => {
+      const idPostfix = sanitizeId(recipient.domainName);
 
       // S3 Bucket stacks
       const s3BucketStack = new S3BucketStack(
@@ -35,7 +35,7 @@ export class MailToDiscordApp extends cdk.Stage {
         `S3BucketStack-${idPostfix}`,
         {
           ...props,
-          bucketName: `inbox.${domainName}`,
+          bucketName: `inbox.${recipient.domainName}`,
         }
       );
 
@@ -43,11 +43,12 @@ export class MailToDiscordApp extends cdk.Stage {
       const lambdaStack = new LambdaStack(this, `LambdaStack-${idPostfix}`, {
         ...props,
         bucketName: s3BucketStack.bucket.bucketName,
+        webhookUrl: recipient.webhookUrl,
       });
 
       // Setup SES rule
       sesRuleSetStack.addSesRule(
-        domainName,
+        recipient.domainName,
         s3BucketStack.bucket,
         lambdaStack.handlerFunction
       );
