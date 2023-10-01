@@ -5,8 +5,8 @@
     "ses-to-discord": "bin/ses-to-discord.js"
   },
   "scripts": {
-    "deploy": "dotenv -- cdk deploy --require-approval never AppStage/\\*",
-    "destroy": "dotenv -- cdk destroy --force AppStage/\\*",
+    "deploy": "dotenv -- cdk deploy --require-approval never MailToDiscordApp/\\*",
+    "destroy": "dotenv -- cdk destroy --force MailToDiscordApp/\\*",
     "build": "tsc",
     "watch": "tsc -w",
     "test": "jest",

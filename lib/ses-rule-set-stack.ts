@@ -1,54 +1,25 @@
 import * as cdk from "aws-cdk-lib";
-import { Duration } from "aws-cdk-lib";
-import { Effect, PolicyStatement } from "aws-cdk-lib/aws-iam";
 import { IFunction } from "aws-cdk-lib/aws-lambda";
-import { RetentionDays } from "aws-cdk-lib/aws-logs";
 import { IBucket } from "aws-cdk-lib/aws-s3";
 import { ReceiptRuleSet } from "aws-cdk-lib/aws-ses";
 import * as actions from "aws-cdk-lib/aws-ses-actions";
-import {
-  AwsCustomResource,
-  AwsCustomResourcePolicy,
-  AwsSdkCall,
-  PhysicalResourceId,
-} from "aws-cdk-lib/custom-resources";
 import { Construct } from "constructs";
+
+interface SesRuleSetStackProps extends cdk.StackProps {
+  dropSpam: boolean;
+  ruleSetName: string;
+}
 
 export class SesRuleSetStack extends cdk.Stack {
   private readonly ruleSet: ReceiptRuleSet;
 
-  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
+  constructor(scope: Construct, id: string, props: SesRuleSetStackProps) {
     super(scope, id, props);
 
     // SES rule set
-    this.ruleSet = new ReceiptRuleSet(this, "RuleSet", {
-      dropSpam: false,
-      receiptRuleSetName: "default",
-    });
-
-    const awsSdkCall: AwsSdkCall = {
-      service: "SES",
-      action: "setActiveReceiptRuleSet",
-      physicalResourceId: PhysicalResourceId.of("DefaultSesCustomResource"),
-      parameters: {
-        RuleSetName: this.ruleSet.receiptRuleSetName,
-      },
-    };
-
-    // Activate rule set
-    new AwsCustomResource(this, "ses_default_rule_set_custom_resource", {
-      onCreate: awsSdkCall,
-      onUpdate: awsSdkCall,
-      logRetention: RetentionDays.ONE_WEEK,
-      policy: AwsCustomResourcePolicy.fromStatements([
-        new PolicyStatement({
-          sid: "SesCustomResourceSetActiveReceiptRuleSet",
-          effect: Effect.ALLOW,
-          actions: ["ses:SetActiveReceiptRuleSet"],
-          resources: ["*"],
-        }),
-      ]),
-      timeout: Duration.seconds(30),
+    this.ruleSet = new ReceiptRuleSet(this, "ReceiptRuleSet", {
+      dropSpam: props.dropSpam,
+      receiptRuleSetName: props.ruleSetName,
     });
   }
 

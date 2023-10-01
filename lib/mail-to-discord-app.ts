@@ -4,8 +4,9 @@ import { LambdaStack } from "./lambda-stack";
 import { S3BucketStack } from "./s3bucket-stack";
 import { sanitizeId } from "./libs/sanitize-id";
 import { SesRuleSetStack } from "./ses-rule-set-stack";
+import * as iam from "aws-cdk-lib/aws-iam";
 
-export interface AppStageProps extends cdk.StageProps {
+export interface MailToDiscordAppProps extends cdk.StageProps {
   webhookUrl: string;
   recipientDomainNames: string[];
 }
@@ -13,12 +14,16 @@ export interface AppStageProps extends cdk.StageProps {
 /**
  * App Stage
  */
-export class AppStage extends cdk.Stage {
-  constructor(scope: Construct, id: string, props: AppStageProps) {
+export class MailToDiscordApp extends cdk.Stage {
+  constructor(scope: Construct, id: string, props: MailToDiscordAppProps) {
     super(scope, id, props);
 
     // SES Rule stack
-    const sesRuleSetStack = new SesRuleSetStack(this, "SesRuleSetStack", props);
+    const sesRuleSetStack = new SesRuleSetStack(this, "SesRuleSetStack", {
+      ...props,
+      dropSpam: false,
+      ruleSetName: "default",
+    });
 
     // Mixing up
     props.recipientDomainNames.forEach((domainName) => {
@@ -40,15 +45,25 @@ export class AppStage extends cdk.Stage {
         bucketName: s3BucketStack.bucket.bucketName,
       });
 
-      s3BucketStack.grantAccessFor(lambdaStack.handlerFunction);
-
+      // Setup SES rule
       sesRuleSetStack.addSesRule(
         domainName,
         s3BucketStack.bucket,
         lambdaStack.handlerFunction
       );
 
-      // Setup dependency
+      // Setup permission
+      const sesPrincipal = new iam.ServicePrincipal("ses.amazonaws.com", {
+        conditions: {
+          StringEquals: { "aws:SourceAccount": this.account },
+        },
+      });
+      s3BucketStack.bucket.grantRead(lambdaStack.handlerFunction);
+      s3BucketStack.bucket.grantDelete(lambdaStack.handlerFunction);
+      s3BucketStack.bucket.grantPut(sesPrincipal);
+      lambdaStack.handlerFunction.grantInvoke(sesPrincipal);
+
+      // Setup stack dependency
       sesRuleSetStack.addDependency(s3BucketStack);
       sesRuleSetStack.addDependency(lambdaStack);
     });
