@@ -7,6 +7,7 @@
   "scripts": {
     "deploy": "dotenv -- cdk deploy --require-approval never MailToDiscordApp/\\*",
     "destroy": "dotenv -- cdk destroy --force MailToDiscordApp/\\*",
+    "synth": "dotenv -- cdk synth",
     "build": "tsc",
     "watch": "tsc -w",
     "test": "jest",
@@ -16,7 +17,7 @@
     "@types/aws-lambda": "^8.10.119",
     "@types/jest": "^29.4.0",
     "@types/mailparser": "^3.4.0",
-    "@types/node": "18.14.6",
+    "@types/node": "^20.9.3",
     "aws-cdk": "^2.97.0",
     "dotenv": "^16.3.1",
     "dotenv-cli": "^7.3.0",
@@ -27,6 +28,7 @@
     "typescript": "^5.2.2"
   },
   "dependencies": {
+    "@aws-lambda-powertools/commons": "^1.17.0",
     "@aws-lambda-powertools/logger": "^1.13.1",
     "@aws-sdk/client-s3": "^3.418.0",
     "@discordjs/builders": "^1.6.5",
