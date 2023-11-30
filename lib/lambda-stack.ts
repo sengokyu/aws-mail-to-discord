@@ -1,7 +1,8 @@
 import * as cdk from "aws-cdk-lib";
-import { IFunction } from "aws-cdk-lib/aws-lambda";
+import * as lambda from "aws-cdk-lib/aws-lambda";
 import { Construct } from "constructs";
-import { SesToDiscord } from "./ses-to-discord";
+import { LambdaWithPowertools } from "../construts/lambda-with-powertools";
+import path = require("path");
 
 export interface LambdaStackProps extends cdk.StackProps {
   bucketName: string;
@@ -12,15 +13,22 @@ export interface LambdaStackProps extends cdk.StackProps {
  * Lambda function stack
  */
 export class LambdaStack extends cdk.Stack {
-  readonly handlerFunction: IFunction;
+  readonly handlerFunction: lambda.IFunction;
 
   constructor(scope: Construct, id: string, props: LambdaStackProps) {
     super(scope, id, props);
 
     // Lambda function
-    this.handlerFunction = new SesToDiscord(this, "function", {
-      bucketName: props.bucketName,
-      webhookUrl: props.webhookUrl,
-    }).handlerFunction;
+    const lambda = new LambdaWithPowertools(this, "function", {
+      description: "Read email from S3 and post to discord.",
+      entry: path.resolve("src/PostMailToDiscord/src/index.ts"),
+      environment: {
+        BUCKET_NAME: props.bucketName,
+        WEBHOOK_URL: props.webhookUrl,
+      },
+      functionName: "PostMailToDiscord",
+    });
+
+    this.handlerFunction = lambda.handlerFunction;
   }
 }

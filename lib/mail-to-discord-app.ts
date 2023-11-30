@@ -3,7 +3,7 @@ import * as iam from "aws-cdk-lib/aws-iam";
 import { Construct } from "constructs";
 import { LambdaStack } from "./lambda-stack";
 import { sanitizeId } from "./libs/sanitize-id";
-import { Recipient } from "./recipient";
+import { Recipient } from "./types/recipient";
 import { S3BucketStack } from "./s3bucket-stack";
 import { SesRuleSetStack } from "./ses-rule-set-stack";
 

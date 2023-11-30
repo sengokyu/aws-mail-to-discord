@@ -9,7 +9,10 @@ describe("SesToDiscord", () => {
     const webhookUrl = "https://webhook.example.com/";
 
     // When
-    const instance = new SesRuleSetStack(app, "SesToDiscord");
+    const instance = new SesRuleSetStack(app, "SesToDiscord", {
+      dropSpam: true,
+      ruleSetName: "Ses rule set",
+    });
 
     // Then
     const template = Template.fromStack(instance);

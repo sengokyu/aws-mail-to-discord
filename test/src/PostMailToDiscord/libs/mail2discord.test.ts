@@ -1,5 +1,5 @@
 import { SESMail } from "aws-lambda";
-import { mail2discordMessage } from "../../../lib/libs/mail2discord";
+import { mail2discordMessage } from "../../../../src/PostMailToDiscord/src/libs/mail2discord";
 
 describe("mail2discordMessage", () => {
   it("convert mail to discord message", async () => {

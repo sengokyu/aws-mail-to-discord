@@ -2,7 +2,7 @@
 import * as cdk from "aws-cdk-lib";
 import "source-map-support/register";
 import { MailToDiscordApp } from "../lib/mail-to-discord-app";
-import { Recipient } from "../lib/recipient";
+import { Recipient } from "../lib/types/recipient";
 
 const domainName2EnvName = (domainName: string) =>
   "WEBHOOK_URL_" + domainName.toUpperCase().replace(/[^A-Z]/, "_");
