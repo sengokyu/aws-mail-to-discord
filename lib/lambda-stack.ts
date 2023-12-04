@@ -20,7 +20,7 @@ export class LambdaStack extends cdk.Stack {
     super(scope, id, props);
 
     this.handlerFunction = new NodejsFunctionWithPowertools(this, id, {
-      logLevel: "DEBUG",
+      logLevel: "INFO",
       description: "Read email from S3 and post to discord.",
       entry: path.resolve("src/PostMailToDiscord/src/index.ts"),
       environment: {
