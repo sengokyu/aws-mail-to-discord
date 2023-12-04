@@ -19,7 +19,7 @@ export class MailToDiscordApp extends cdk.Stage {
     super(scope, id, props);
 
     // SES Rule stack
-    const sesRuleSetStack = new SesRuleSetStack(this, "SesRuleSetStack", {
+    const sesRuleSetStack = new SesRuleSetStack(this, "SesRuleSet", {
       ...props,
       dropSpam: false,
       ruleSetName: "default",
@@ -30,17 +30,13 @@ export class MailToDiscordApp extends cdk.Stage {
       const idPostfix = sanitizeId(recipient.domainName);
 
       // S3 Bucket stacks
-      const s3BucketStack = new S3BucketStack(
-        this,
-        `S3BucketStack-${idPostfix}`,
-        {
-          ...props,
-          bucketName: `inbox.${recipient.domainName}`,
-        }
-      );
+      const s3BucketStack = new S3BucketStack(this, `S3Bucket-${idPostfix}`, {
+        ...props,
+        bucketName: `inbox.${recipient.domainName}`,
+      });
 
       // Lambda stack
-      const lambdaStack = new LambdaStack(this, `LambdaStack-${idPostfix}`, {
+      const lambdaStack = new LambdaStack(this, `Lambda-${idPostfix}`, {
         ...props,
         bucketName: s3BucketStack.bucket.bucketName,
         webhookUrl: recipient.webhookUrl,

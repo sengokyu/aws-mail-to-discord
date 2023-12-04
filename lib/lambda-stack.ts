@@ -1,7 +1,8 @@
 import * as cdk from "aws-cdk-lib";
 import * as lambda from "aws-cdk-lib/aws-lambda";
+import * as logs from "aws-cdk-lib/aws-logs";
 import { Construct } from "constructs";
-import { LambdaWithPowertools } from "../construts/lambda-with-powertools";
+import { NodejsFunctionWithPowertools } from "../construts/nodejs-function-with-powertools";
 import path = require("path");
 
 export interface LambdaStackProps extends cdk.StackProps {
@@ -18,17 +19,17 @@ export class LambdaStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: LambdaStackProps) {
     super(scope, id, props);
 
-    // Lambda function
-    const lambda = new LambdaWithPowertools(this, "function", {
+    this.handlerFunction = new NodejsFunctionWithPowertools(this, id, {
+      logLevel: "DEBUG",
       description: "Read email from S3 and post to discord.",
       entry: path.resolve("src/PostMailToDiscord/src/index.ts"),
       environment: {
         BUCKET_NAME: props.bucketName,
         WEBHOOK_URL: props.webhookUrl,
       },
-      functionName: "PostMailToDiscord",
+      logRetention: logs.RetentionDays.ONE_WEEK,
+      runtime: lambda.Runtime.NODEJS_20_X,
+      timeout: cdk.Duration.seconds(15),
     });
-
-    this.handlerFunction = lambda.handlerFunction;
   }
 }

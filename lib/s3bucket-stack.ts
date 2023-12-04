@@ -19,11 +19,13 @@ export class S3BucketStack extends cdk.Stack {
   }
 
   private createBucket(bucketName: string) {
-    return new s3.Bucket(this, bucketName, {
+    const bucket = new s3.Bucket(this, bucketName, {
       bucketName,
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
       autoDeleteObjects: true,
     });
+
+    return bucket;
   }
 }
