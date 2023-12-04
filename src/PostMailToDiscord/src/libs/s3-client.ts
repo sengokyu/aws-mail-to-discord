@@ -1,20 +1,19 @@
-import { Logger } from "@aws-lambda-powertools/logger";
 import { S3 } from "@aws-sdk/client-s3";
+import { promiseRetry } from "./promise-retry";
 
-const logger = new Logger();
 const s3 = new S3();
 
 export const getMailBodyFromS3 = async (
   bucketName: string,
   messageId: string
-): Promise<string | undefined> => {
-  logger.debug("Try to get data from S3.", { bucketName, messageId });
-
-  const data = await s3.getObject({ Bucket: bucketName, Key: messageId });
+): Promise<string> => {
+  const data = await promiseRetry(
+    () => s3.getObject({ Bucket: bucketName, Key: messageId }),
+    { count: 3, delay: 8000 }
+  );
 
   if (!data.Body) {
-    logger.warn("Mail body is empty.", { messageId });
-    return;
+    throw new Error("Mail body is empty.");
   }
 
   return await data.Body.transformToString();

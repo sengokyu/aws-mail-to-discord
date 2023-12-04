@@ -31,7 +31,7 @@ describe("mail2discordMessage", () => {
 
     // Then
     expect(actual).toEqual({
-      embed: [
+      embeds: [
         {
           author: {
             icon_url: undefined,

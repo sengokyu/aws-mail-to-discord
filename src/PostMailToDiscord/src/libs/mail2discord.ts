@@ -10,16 +10,7 @@ const sender2color = (sender?: string): number => {
   return parseInt("0x" + hash.digest("hex").substring(0, 6));
 };
 
-/**
- * Convert mail to Discord message
- * @param src
- * @returns
- */
-export const mail2discordMessage = async (
-  sesMail: SESMail,
-  src: string
-): Promise<object> => {
-  const parsed = await simpleParser(src);
+const createEmbedBuilder = (sesMail: SESMail) => {
   const builder = new EmbedBuilder();
 
   const authorName = Array.isArray(sesMail.commonHeaders.from)
@@ -29,11 +20,28 @@ export const mail2discordMessage = async (
 
   builder.setAuthor({ name: authorName ?? "Unknown" });
   builder.setColor(sender2color(authorName));
-  builder.setDescription(parsed.text ?? null);
+
   if (!isNaN(timestamp)) {
     builder.setTimestamp(timestamp);
   }
   builder.setTitle(sesMail.commonHeaders.subject ?? "No title");
 
-  return { embed: [builder.toJSON()] };
+  return builder;
+};
+
+/**
+ * Convert mail to Discord message
+ * @param src
+ * @returns
+ */
+export const mail2discordMessage = async (
+  sesMail: SESMail,
+  src: string
+): Promise<{ embeds: object }> => {
+  const parsed = await simpleParser(src);
+  const builder = createEmbedBuilder(sesMail);
+
+  builder.setDescription(parsed.text ?? null);
+
+  return { embeds: [builder.toJSON()] };
 };
