@@ -1,7 +1,9 @@
 type Operation<T> = () => Promise<T>;
 
-interface RetryConfig {
+interface PromiseRetryConfig {
+  // エラー発生後のリトライ回数
   count: number;
+  // エラー発生後の待ち時間(ms)
   delay: number;
 }
 
@@ -11,30 +13,25 @@ const wait = (delay: number) =>
 /**
  * エラー時リトライする
  * @param operation
- * @param retryConfig
+ * @param config
  * @returns
  */
-export const promiseRetry = <T>(
+export const promiseRetry = async <T>(
   operation: Operation<T>,
-  retryConfig: RetryConfig
+  config: PromiseRetryConfig
 ): Promise<T> => {
-  return new Promise<T>((resolve, reject) => {
-    operation()
-      .then(resolve)
-      .catch((err) => {
-        if (retryConfig.count > 0) {
-          wait(retryConfig.delay)
-            .then(() =>
-              promiseRetry(operation, {
-                count: retryConfig.count - 1,
-                delay: retryConfig.delay,
-              })
-            )
-            .then(resolve)
-            .catch(reject);
-        } else {
-          reject(err);
-        }
-      });
-  });
+  try {
+    return await operation();
+  } catch (err) {
+    if (config.count === 0) {
+      throw err;
+    }
+
+    await wait(config.delay);
+
+    return await promiseRetry(operation, {
+      count: config.count - 1,
+      delay: config.delay,
+    });
+  }
 };

@@ -8,11 +8,10 @@ describe("promiseRetry", () => {
     let executedCount = 0;
 
     // Given
-    const operation = () =>
-      new Promise(async (resolve) => {
-        await wait(1);
-        resolve(++executedCount);
-      });
+    const operation = async () => {
+      await wait(1);
+      return ++executedCount;
+    };
     const retryConfig = { count: 3, delay: 1 };
 
     // When
@@ -22,47 +21,42 @@ describe("promiseRetry", () => {
     expect(actual).toBe(1);
   });
 
-  it("指定回数リトライするが失敗", (done) => {
+  it("指定回数リトライするが失敗", async () => {
     let executedCount = 0;
 
     // Given
-    const operation = () => {
-      return new Promise(async (_, reject) => {
-        await wait(1);
-        reject(++executedCount);
-      });
+    const operation = async () => {
+      await wait(1);
+      throw ++executedCount;
     };
     const retryConfig = { count: 3, delay: 1 };
 
-    // When
-    promiseRetry(operation, retryConfig)
-      .then(() => {
-        // ここには来ない
-        expect.assertions(0);
-      })
-      .catch((err) => {
-        // Then
-        expect(err).toBe(4); // 初回+3回リトライ
-        done();
-      });
+    try {
+      // When
+      await promiseRetry(operation, retryConfig);
+      // ここには来ない
+      expect.assertions(0);
+    } catch (err) {
+      // Then
+      expect(err).toBe(4); // 初回+3回リトライ
+    }
   }, 6000);
 
   it("リトライして成功する", async () => {
     let executedCount = 0;
 
     // Given
-    const operation = () => {
-      return new Promise(async (resolve, reject) => {
-        await wait(1);
+    const operation = async () => {
+      await wait(1);
 
-        // 3回目で成功
-        if (++executedCount === 3) {
-          resolve(executedCount);
-        } else {
-          reject(executedCount);
-        }
-      });
+      // 3回目で成功
+      if (++executedCount === 3) {
+        return executedCount;
+      } else {
+        throw executedCount;
+      }
     };
+
     const retryConfig = { count: 3, delay: 1 };
 
     // When
@@ -72,28 +66,24 @@ describe("promiseRetry", () => {
     expect(actual).toBe(3); // 初回+2回で成功
   });
 
-  it("リトライさせないで失敗", (done) => {
+  it("リトライさせないで失敗", async () => {
     let executedCount = 0;
 
     // Given
-    const operation = () => {
-      return new Promise(async (_, reject) => {
-        await wait(1);
-        reject(++executedCount);
-      });
+    const operation = async () => {
+      await wait(1);
+      throw ++executedCount;
     };
     const retryConfig = { count: 0, delay: 1 };
 
-    // When
-    promiseRetry(operation, retryConfig)
-      .then(() => {
-        // ここには来ない
-        expect.assertions(0);
-      })
-      .catch((err) => {
-        // Then
-        expect(err).toBe(1); // 初回のみ
-        done();
-      });
+    try {
+      // When
+      await promiseRetry(operation, retryConfig);
+      // ここには来ない
+      expect.assertions(0);
+    } catch (err) {
+      // Then
+      expect(err).toBe(1); // 初回のみ
+    }
   });
 });
